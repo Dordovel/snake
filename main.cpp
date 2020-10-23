@@ -1,5 +1,5 @@
-#include "./object.h"
-#include "./terminal.h"
+#include "./header/object.h"
+#include "./header/terminal.h"
 
 #include <vector>
 #include <charconv>

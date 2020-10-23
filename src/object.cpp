@@ -1,4 +1,4 @@
-#include "./object.h"
+#include "../header/object.h"
 
 Object::Object(std::string_view ch, int color):_ch(ch), _color(color){}
 

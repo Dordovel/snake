@@ -1,7 +1,7 @@
 #ifndef OBJECT
 #define OBJECT
 
-#include "./iobject.h"
+#include "../interface/iobject.h"
 
 class Object final : public IObject
 {

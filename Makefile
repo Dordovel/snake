@@ -1,2 +1,2 @@
 all:
-	clang++ -std=c++17 -g ./*.cpp -o main
+	clang++ -std=c++17 -g ./src/*.cpp ./main.cpp -o main -lncurses

@@ -1,4 +1,4 @@
-#include "./terminal.h"
+#include "../header/terminal.h"
 
 #include <ncurses.h>
 

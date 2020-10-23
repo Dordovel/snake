@@ -1,8 +1,8 @@
 #ifndef TERMINAL
 #define TERMINAL
 
-#include "./iobject.h"
-#include "./color.h"
+#include "../interface/iobject.h"
+#include "../color.h"
 
 class Terminal
 {
