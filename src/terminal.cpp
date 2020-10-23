@@ -56,6 +56,11 @@ int Terminal::input() const noexcept
 	return getch();
 }
 
+void Terminal::block_input(bool flag) noexcept
+{
+	nodelay(stdscr, !flag);
+}
+
 void Terminal::draw(IObject& object) noexcept
 {
 	move(object.get_y(), object.get_x());

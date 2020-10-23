@@ -8,6 +8,7 @@ class ICollision
 	public:
 
 		virtual bool collision(IStatic& object) noexcept = 0;
+		virtual bool collision(int x, int y) noexcept = 0;
 
 		virtual ~ICollision() = default;
 };

@@ -25,6 +25,7 @@ class Terminal
 		void update() noexcept;
 		void close() noexcept;
 		void clear() noexcept;
+		void block_input(bool flag) noexcept;
 
 		void register_color(int index, Color color) noexcept;
 

@@ -23,6 +23,7 @@ class Object final : public IObject
 		int get_color() const noexcept override;
 
 		bool collision(IStatic& object) noexcept override;
+		bool collision(int x, int y) noexcept override;
 
 		~Object() = default;
 };

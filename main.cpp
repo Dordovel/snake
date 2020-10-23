@@ -4,6 +4,7 @@
 #include <vector>
 #include <charconv>
 #include <random>
+#include <thread>
 
 
 #define KEY_DOWN	0402
@@ -12,37 +13,30 @@
 #define KEY_RIGHT	0405
 #define KEY_ENTER	10
 
+struct Snake
+{
+	Object head;
+	std::vector<Object> tails;
+};
+
 int main()
 {
 	Terminal terminal;
 	terminal.init();
 
 	terminal.init_color();
+	terminal.block_input(false);
 
-	terminal.register_color(1, Color::BLACK);
 	terminal.register_color(2, Color::WHITE);
 	terminal.register_color(3, Color::CYAN);
-	terminal.register_color(4, Color::WHITE);
 	terminal.register_color(5, Color::GREEN);
 	terminal.register_color(6, Color::RED);
-
-	terminal.set_color(1);
+	terminal.register_color(7, Color::YELLOW);
 
 	const int width = terminal.width();
 	const int height = terminal.height();
 
 	Object map[width][height];
-
-	Object head("*", 3);
-	head.set_position(10, 10);
-
-	std::vector<Object> tails;
-
-	Object point("@", 4);
-	point.set_position(10,15);
-
-	Object score("0", 5);
-	score.set_position((width / 2), 1);
 
 
 	Object value;
@@ -79,15 +73,119 @@ int main()
 
 	int input = 0;
 
-	int x;
-	int y;
+	int x, y, x_1, y_1;
 
 	bool run = true;
 	bool over = false;
+	bool point_move = false;
 
 	std::random_device rd;
 	std::uniform_int_distribution<int> uidY(1, (height - 1));
 	std::uniform_int_distribution<int> uidX(1, (width - 1));
+
+	Snake snake;
+	snake.head.set_pointer("*", 2);
+	snake.head.set_position(10, 10);
+
+	Snake snake1;
+	snake1.head.set_pointer("*", 2);
+	snake1.head.set_position(10, 10);
+
+	Object point("#", 2);
+	point.set_position(10,15);
+
+	Object score("0", 5);
+	score.set_position((width / 2), 1);
+
+	std::thread pt([&snake1, &point, &run, &point_move]
+			{
+				int x, y, x_, y_, x_1, y_1;
+				while(run)
+				{
+					x = snake1.head.get_x();
+					y = snake1.head.get_y();
+					
+					if(!snake1.head.collision(point))
+					{
+						x_1 = point.get_x();
+						y_1 = point.get_y();
+
+						if(!snake1.tails.empty())
+						{
+							for(auto& tail : snake1.tails)
+							{
+								if(x > x_1)
+								{
+									if(!tail.collision((x - 1), y))
+									{
+										snake1.head.set_position(x - 1, y);
+									}
+								}
+								if(x < x_1)
+								{
+									if(!tail.collision((x + 1), y))
+									{
+										snake1.head.set_position((x + 1), y);
+									}
+								}
+								if(y > y_1)
+								{
+									if(!tail.collision(x, (y - 1)))
+									{
+										snake1.head.set_position(x, (y - 1));
+									}
+								}
+								if(y < y_1)
+								{
+									if(!tail.collision(x, (y + 1)))
+									{
+										snake1.head.set_position(x, (y + 1));
+									}
+								}
+
+								x_1 = tail.get_x();
+								y_1 = tail.get_y();
+
+								tail.set_position(x, y);
+
+								x = x_1;
+								y = y_1;
+							}
+						}
+						else
+						{
+							if(x > x_1)
+							{
+								snake1.head.set_position(x - 1, y);
+							}
+							if(x < x_1)
+							{
+								snake1.head.set_position((x + 1), y);
+							}
+							if(y > y_1)
+							{
+								snake1.head.set_position(x, (y - 1));
+							}
+							if(y < y_1)
+							{
+								snake1.head.set_position(x, (y + 1));
+							}
+						}
+						
+					}
+					else
+					{
+						if((snake1.tails.size() % 2) == 0)
+							snake1.tails.emplace_back(snake1.head.get_pointer(), 7);
+						else
+							snake1.tails.emplace_back(snake1.head.get_pointer(), 3);
+
+						point_move = true;
+					}
+
+					std::this_thread::sleep_for(std::chrono::milliseconds(70));
+				}
+			});
 
 	while(run)
 	{
@@ -101,22 +199,32 @@ int main()
 
 		terminal.draw(point);
 		terminal.draw(score);
-		
-		for(auto& tail : tails)
+
+		terminal.draw(snake1.head);
+		for(auto& tail : snake1.tails)
+		{
+			terminal.draw (tail);
+		}
+
+		terminal.draw(snake.head);
+		for(auto& tail : snake.tails)
 		{
 			terminal.draw(tail);
 		}
 
-		terminal.draw(head);
-
-		input = terminal.input();
-
-		x = head.get_x();
-		y = head.get_y();
-
-		if(head.collision(point))
+		if(point_move)
 		{
-			tails.emplace_back(head.get_pointer(), head.get_color());
+			point.set_position(uidX(rd), uidY(rd));
+			point_move = false;
+		}
+
+		if(snake.head.collision(point))
+		{
+			if((snake.tails.size() % 2) == 0)
+				snake.tails.emplace_back(snake.head.get_pointer(), 7);
+			else
+				snake.tails.emplace_back(snake.head.get_pointer(), 3);
+
 			int score_int;
 
 			std::string_view point_char = score.get_pointer();
@@ -124,77 +232,85 @@ int main()
 			
 			score_int += 10;
 
-			char point_char_buf[3];
-			std::to_chars(point_char_buf,  point_char_buf + 3, score_int);
+			char point_char_buf[10];
+			std::to_chars(point_char_buf,  point_char_buf + 10, score_int);
 
 			score.set_pointer(point_char_buf, score.get_color());
 
-			point.set_position(uidX(rd), uidY(rd));
+			point_move = true;
 		}
 
-		switch(input)
+		input = terminal.input();
+
+		if(input != -1)
 		{
-			case KEY_UP:
+			x = snake.head.get_x();
+			y = snake.head.get_y();
+
+			switch(input)
 			{
-				if(y > 1)
-					head.set_position(x, y - 1);
-				else
-					head.set_position(x, height - 1);
-				break;
+				case KEY_UP:
+				{
+					if(y > 1)
+						snake.head.set_position(x, (y - 1));
+					else
+						snake.head.set_position(x, (height - 1));
+					break;
+				}
+				case KEY_DOWN:
+				{
+					if(y < height)
+						snake.head.set_position(x, (y + 1));
+					else
+						snake.head.set_position(x, 1);
+					break;
+				}
+				case KEY_LEFT:
+				{
+					if(x > 1)
+						snake.head.set_position((x - 1), y);
+					else
+						snake.head.set_position((width - 1), y);
+					break;
+				}
+				case KEY_RIGHT:
+				{
+					if(x < width)
+						snake.head.set_position((x + 1), y);
+					else
+						snake.head.set_position(1, y);
+					break;
+				}
+				case KEY_ENTER:
+				{
+					run = false;
+					break;
+				}
+
+				default: break;
 			}
-			case KEY_DOWN:
+
+			for(auto& tail : snake.tails)
 			{
-				if(y < height)
-					head.set_position(x, y + 1);
+				if(!snake.head.collision(tail))
+				{
+					x_1 = tail.get_x();
+					y_1 = tail.get_y();
+
+					tail.set_position(x, y);
+
+					x = x_1;
+					y = y_1;
+				}
 				else
-					head.set_position(x, 1);
-				break;
-			}
-			case KEY_LEFT:
-			{
-				if(x > 1)
-					head.set_position(x - 1, y);
-				else
-					head.set_position(width - 1, y);
-				break;
-			}
-			case KEY_RIGHT:
-			{
-				if(x < width)
-					head.set_position(x + 1, y);
-				else
-					head.set_position(1, y);
-				break;
-			}
-			case KEY_ENTER:
-			{
-				run = false;
-				break;
+				{
+					run = false;
+					over = true;
+				}
 			}
 		}
-
-		for(auto& tail : tails)
-		{
-			if(!head.collision(tail))
-			{
-				int x_1 = tail.get_x();
-				int y_1 = tail.get_y();
-
-				tail.set_position(x, y);
-
-				x = x_1;
-				y = y_1;
-
-			}
-			else
-			{
-				run = false;
-				over = true;
-			}
-
-		}
-
-		terminal.clear();
+		
+		input = 0;
 		terminal.update();
 	}
 
@@ -202,14 +318,16 @@ int main()
 	{
 		terminal.clear();
 		terminal.update();
-		score.set_pointer("Game Over. Your score: " + score.get_pointer(), score.get_color());
+		score.set_pointer("Game Over. Your score: " + score.get_pointer(), 6);
 		score.set_position((width / 2) - (score.get_pointer().size() / 2), score.get_y());
 		terminal.draw(score);
 
+		terminal.block_input(true);
 		terminal.input();
 	}
 
 	terminal.close();
+	pt.join();
 
 	return 0;
 }

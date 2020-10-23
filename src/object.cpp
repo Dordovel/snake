@@ -41,3 +41,8 @@ bool Object::collision(IStatic& object) noexcept
 
 	return (this->_x == x) && (this->_y == y);
 }
+
+bool Object::collision(int x, int y) noexcept
+{
+	return (this->_x == x) && (this->_y == y);
+}
