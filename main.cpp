@@ -99,7 +99,7 @@ int main()
 
 	std::thread pt([&snake1, &point, &run, &point_move]
 			{
-				int x, y, x_, y_, x_1, y_1;
+				int x, y, x_1, y_1;
 				while(run)
 				{
 					x = snake1.head.get_x();
