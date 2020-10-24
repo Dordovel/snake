@@ -87,105 +87,11 @@ int main()
 	snake.head.set_pointer("*", 2);
 	snake.head.set_position(10, 10);
 
-	Snake snake1;
-	snake1.head.set_pointer("*", 2);
-	snake1.head.set_position(10, 10);
-
 	Object point("#", 2);
 	point.set_position(10,15);
 
 	Object score("0", 5);
 	score.set_position((width / 2), 1);
-
-	std::thread pt([&snake1, &point, &run, &point_move]
-			{
-				int x, y, x_1, y_1;
-				while(run)
-				{
-					x = snake1.head.get_x();
-					y = snake1.head.get_y();
-					
-					if(!snake1.head.collision(point))
-					{
-						x_1 = point.get_x();
-						y_1 = point.get_y();
-
-						if(!snake1.tails.empty())
-						{
-							for(auto& tail : snake1.tails)
-							{
-								if(x > x_1)
-								{
-									if(!tail.collision((x - 1), y))
-									{
-										snake1.head.set_position(x - 1, y);
-									}
-								}
-								if(x < x_1)
-								{
-									if(!tail.collision((x + 1), y))
-									{
-										snake1.head.set_position((x + 1), y);
-									}
-								}
-								if(y > y_1)
-								{
-									if(!tail.collision(x, (y - 1)))
-									{
-										snake1.head.set_position(x, (y - 1));
-									}
-								}
-								if(y < y_1)
-								{
-									if(!tail.collision(x, (y + 1)))
-									{
-										snake1.head.set_position(x, (y + 1));
-									}
-								}
-
-								x_1 = tail.get_x();
-								y_1 = tail.get_y();
-
-								tail.set_position(x, y);
-
-								x = x_1;
-								y = y_1;
-							}
-						}
-						else
-						{
-							if(x > x_1)
-							{
-								snake1.head.set_position(x - 1, y);
-							}
-							if(x < x_1)
-							{
-								snake1.head.set_position((x + 1), y);
-							}
-							if(y > y_1)
-							{
-								snake1.head.set_position(x, (y - 1));
-							}
-							if(y < y_1)
-							{
-								snake1.head.set_position(x, (y + 1));
-							}
-						}
-						
-					}
-					else
-					{
-						if((snake1.tails.size() % 2) == 0)
-							snake1.tails.emplace_back(snake1.head.get_pointer(), 7);
-						else
-							snake1.tails.emplace_back(snake1.head.get_pointer(), 3);
-
-						point_move = true;
-					}
-
-					std::this_thread::sleep_for(std::chrono::milliseconds(70));
-				}
-			});
 
 	while(run)
 	{
@@ -199,12 +105,6 @@ int main()
 
 		terminal.draw(point);
 		terminal.draw(score);
-
-		terminal.draw(snake1.head);
-		for(auto& tail : snake1.tails)
-		{
-			terminal.draw (tail);
-		}
 
 		terminal.draw(snake.head);
 		for(auto& tail : snake.tails)
@@ -327,7 +227,6 @@ int main()
 	}
 
 	terminal.close();
-	pt.join();
 
 	return 0;
 }
