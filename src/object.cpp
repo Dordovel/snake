@@ -34,7 +34,7 @@ int Object::get_color() const noexcept
 	return this->_color;
 }
 
-bool Object::collision(IStatic& object) noexcept
+bool Object::collision(const IStatic& object) noexcept
 {
 	int x = object.get_x();
 	int y = object.get_y();

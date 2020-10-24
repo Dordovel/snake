@@ -3,7 +3,7 @@
 
 #include "../interface/iobject.h"
 
-class Object final : public IObject
+class Object : virtual public IObject
 {
 	private:
 		std::string _ch = " ";
@@ -22,7 +22,7 @@ class Object final : public IObject
 		const std::string& get_pointer() const noexcept override;
 		int get_color() const noexcept override;
 
-		bool collision(IStatic& object) noexcept override;
+		bool collision(const IStatic& object) noexcept override;
 		bool collision(int x, int y) noexcept override;
 
 		~Object() = default;

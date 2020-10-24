@@ -1,9 +1,11 @@
 #include "./header/object.h"
 #include "./header/terminal.h"
+#include "./header/snake.h"
+#include "./header/point.h"
+#include "./header/second.h"
 
 #include <vector>
 #include <charconv>
-#include <random>
 #include <thread>
 
 
@@ -12,12 +14,6 @@
 #define KEY_LEFT	0404
 #define KEY_RIGHT	0405
 #define KEY_ENTER	10
-
-struct Snake
-{
-	Object head;
-	std::vector<Object> tails;
-};
 
 int main()
 {
@@ -79,113 +75,25 @@ int main()
 	bool over = false;
 	bool point_move = false;
 
-	std::random_device rd;
-	std::uniform_int_distribution<int> uidY(1, (height - 1));
-	std::uniform_int_distribution<int> uidX(1, (width - 1));
-
 	Snake snake;
 	snake.head.set_pointer("*", 2);
 	snake.head.set_position(10, 10);
 
-	Snake snake1;
-	snake1.head.set_pointer("*", 2);
-	snake1.head.set_position(10, 10);
-
-	Object point("#", 2);
+	Point point("#", 2);
+	point.init(1, width, 1, height);
 	point.set_position(10,15);
 
 	Object score("0", 5);
 	score.set_position((width / 2), 1);
 
-	std::thread pt([&snake1, &point, &run, &point_move]
-			{
-				int x, y, x_1, y_1;
-				while(run)
-				{
-					x = snake1.head.get_x();
-					y = snake1.head.get_y();
-					
-					if(!snake1.head.collision(point))
-					{
-						x_1 = point.get_x();
-						y_1 = point.get_y();
+	Second second;
+	second.get_snake().head.set_pointer("*", 2);
+	second.get_snake().head.set_position(10, 15);
+	second.set_program_status(run);
 
-						if(!snake1.tails.empty())
-						{
-							for(auto& tail : snake1.tails)
-							{
-								if(x > x_1)
-								{
-									if(!tail.collision((x - 1), y))
-									{
-										snake1.head.set_position(x - 1, y);
-									}
-								}
-								if(x < x_1)
-								{
-									if(!tail.collision((x + 1), y))
-									{
-										snake1.head.set_position((x + 1), y);
-									}
-								}
-								if(y > y_1)
-								{
-									if(!tail.collision(x, (y - 1)))
-									{
-										snake1.head.set_position(x, (y - 1));
-									}
-								}
-								if(y < y_1)
-								{
-									if(!tail.collision(x, (y + 1)))
-									{
-										snake1.head.set_position(x, (y + 1));
-									}
-								}
+	Snake& secondSnake = second.get_snake();
 
-								x_1 = tail.get_x();
-								y_1 = tail.get_y();
-
-								tail.set_position(x, y);
-
-								x = x_1;
-								y = y_1;
-							}
-						}
-						else
-						{
-							if(x > x_1)
-							{
-								snake1.head.set_position(x - 1, y);
-							}
-							if(x < x_1)
-							{
-								snake1.head.set_position((x + 1), y);
-							}
-							if(y > y_1)
-							{
-								snake1.head.set_position(x, (y - 1));
-							}
-							if(y < y_1)
-							{
-								snake1.head.set_position(x, (y + 1));
-							}
-						}
-						
-					}
-					else
-					{
-						if((snake1.tails.size() % 2) == 0)
-							snake1.tails.emplace_back(snake1.head.get_pointer(), 7);
-						else
-							snake1.tails.emplace_back(snake1.head.get_pointer(), 3);
-
-						point_move = true;
-					}
-
-					std::this_thread::sleep_for(std::chrono::milliseconds(70));
-				}
-			});
+	std::thread pt(second, &point);
 
 	while(run)
 	{
@@ -200,8 +108,8 @@ int main()
 		terminal.draw(point);
 		terminal.draw(score);
 
-		terminal.draw(snake1.head);
-		for(auto& tail : snake1.tails)
+		terminal.draw(secondSnake.head);
+		for(auto& tail : secondSnake.tails)
 		{
 			terminal.draw (tail);
 		}
@@ -214,7 +122,7 @@ int main()
 
 		if(point_move)
 		{
-			point.set_position(uidX(rd), uidY(rd));
+			point.update();
 			point_move = false;
 		}
 
@@ -327,6 +235,8 @@ int main()
 	}
 
 	terminal.close();
+
+	second.set_program_status(false);
 	pt.join();
 
 	return 0;
